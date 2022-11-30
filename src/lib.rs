@@ -7,4 +7,6 @@ extern crate aoc_runner_derive;
 #[macro_use]
 extern crate lazy_static;
 
+mod util;
+
 aoc_lib! { year = 2022 }
