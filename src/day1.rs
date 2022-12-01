@@ -8,7 +8,7 @@ pub fn input_generator(input: &str) -> Vec<Vec<i32>> {
 
 #[aoc(day1, part1)]
 pub fn part1(input: &[Vec<i32>]) -> i32 {
-    todo!()
+    input.iter().map(|inventory| inventory.iter().sum()).max().unwrap()
 }
 
 #[aoc(day1, part2)]
@@ -21,13 +21,28 @@ mod tests {
     use super::*;
 
     lazy_static! {
-        static ref TEST_INPUT: &'static str = r"".trim();
+        static ref TEST_INPUT: &'static str = r"
+1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000
+        ".trim();
     }
 
     #[test]
     fn test_part1() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part1(&input), 0);
+        assert_eq!(part1(&input), 24000);
     }
 
     #[test]
