@@ -13,7 +13,9 @@ pub fn part1(input: &[Vec<i32>]) -> i32 {
 
 #[aoc(day1, part2)]
 pub fn part2(input: &[Vec<i32>]) -> i32 {
-    todo!()
+    let mut sums = input.iter().map(|inventory| inventory.iter().sum()).collect::<Vec<i32>>();
+    sums.sort();
+    sums[sums.len() - 3..].iter().sum()
 }
 
 #[cfg(test)]
@@ -48,6 +50,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 45000);
     }
 }
