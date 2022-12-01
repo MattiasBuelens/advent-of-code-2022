@@ -8,12 +8,19 @@ pub fn input_generator(input: &str) -> Vec<Vec<i32>> {
 
 #[aoc(day1, part1)]
 pub fn part1(input: &[Vec<i32>]) -> i32 {
-    input.iter().map(|inventory| inventory.iter().sum()).max().unwrap()
+    input
+        .iter()
+        .map(|inventory| inventory.iter().sum())
+        .max()
+        .unwrap()
 }
 
 #[aoc(day1, part2)]
 pub fn part2(input: &[Vec<i32>]) -> i32 {
-    let mut sums = input.iter().map(|inventory| inventory.iter().sum()).collect::<Vec<i32>>();
+    let mut sums = input
+        .iter()
+        .map(|inventory| inventory.iter().sum())
+        .collect::<Vec<i32>>();
     sums.sort();
     sums[sums.len() - 3..].iter().sum()
 }
@@ -37,8 +44,8 @@ mod tests {
 8000
 9000
 
-10000
-        ".trim();
+10000"
+            .trim();
     }
 
     #[test]
