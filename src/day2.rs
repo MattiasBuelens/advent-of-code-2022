@@ -5,14 +5,21 @@ pub enum Hand {
     Scissors,
 }
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum Strategy {
+    X,
+    Y,
+    Z,
+}
+
 #[derive(Debug, Copy, Clone)]
-pub struct Game {
+pub struct Input {
     enemy: Hand,
-    you: Hand,
+    you: Strategy,
 }
 
 #[aoc_generator(day2)]
-pub fn input_generator(input: &str) -> Vec<Game> {
+pub fn input_generator(input: &str) -> Vec<Input> {
     input
         .lines()
         .map(|line| {
@@ -24,14 +31,39 @@ pub fn input_generator(input: &str) -> Vec<Game> {
                 _ => panic!("invalid input"),
             };
             let you = match you {
-                "X" => Hand::Rock,
-                "Y" => Hand::Paper,
-                "Z" => Hand::Scissors,
+                "X" => Strategy::X,
+                "Y" => Strategy::Y,
+                "Z" => Strategy::Z,
                 _ => panic!("invalid input"),
             };
-            Game { you, enemy }
+            Input { you, enemy }
         })
         .collect()
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Game {
+    enemy: Hand,
+    you: Hand,
+}
+
+impl Strategy {
+    fn to_hand(self) -> Hand {
+        match self {
+            Strategy::X => Hand::Rock,
+            Strategy::Y => Hand::Paper,
+            Strategy::Z => Hand::Scissors,
+        }
+    }
+}
+
+impl Input {
+    fn to_game_part1(self) -> Game {
+        Game {
+            enemy: self.enemy,
+            you: self.you.to_hand(),
+        }
+    }
 }
 
 impl Game {
@@ -60,12 +92,15 @@ impl Game {
 }
 
 #[aoc(day2, part1)]
-pub fn part1(input: &[Game]) -> i32 {
-    input.iter().map(|game| game.score()).sum()
+pub fn part1(input: &[Input]) -> i32 {
+    input
+        .iter()
+        .map(|input| input.to_game_part1().score())
+        .sum()
 }
 
 #[aoc(day2, part2)]
-pub fn part2(input: &[Game]) -> i32 {
+pub fn part2(input: &[Input]) -> i32 {
     todo!()
 }
 
