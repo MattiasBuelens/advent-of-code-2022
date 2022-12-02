@@ -70,6 +70,7 @@ impl Game {
     fn score(self) -> i32 {
         self.score_hand() + self.score_outcome()
     }
+
     fn score_hand(self) -> i32 {
         match self.you {
             Hand::Rock => 1,
@@ -77,6 +78,7 @@ impl Game {
             Hand::Scissors => 3,
         }
     }
+
     fn score_outcome(self) -> i32 {
         match (self.you, self.enemy) {
             // Win
@@ -99,9 +101,43 @@ pub fn part1(input: &[Input]) -> i32 {
         .sum()
 }
 
+impl Hand {
+    fn winning_hand(self) -> Hand {
+        match self {
+            Hand::Rock => Hand::Paper,
+            Hand::Paper => Hand::Scissors,
+            Hand::Scissors => Hand::Rock,
+        }
+    }
+    fn losing_hand(self) -> Hand {
+        match self {
+            Hand::Rock => Hand::Scissors,
+            Hand::Paper => Hand::Rock,
+            Hand::Scissors => Hand::Paper,
+        }
+    }
+}
+
+impl Input {
+    fn to_game_part2(self) -> Game {
+        let you = match self.you {
+            Strategy::X => self.enemy.losing_hand(),
+            Strategy::Y => self.enemy,
+            Strategy::Z => self.enemy.winning_hand(),
+        };
+        Game {
+            enemy: self.enemy,
+            you,
+        }
+    }
+}
+
 #[aoc(day2, part2)]
 pub fn part2(input: &[Input]) -> i32 {
-    todo!()
+    input
+        .iter()
+        .map(|input| input.to_game_part2().score())
+        .sum()
 }
 
 #[cfg(test)]
@@ -126,6 +162,6 @@ C Z
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 12);
     }
 }
