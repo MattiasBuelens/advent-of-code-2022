@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 #[aoc_generator(day3)]
 pub fn input_generator(input: &str) -> Vec<String> {
     input.lines().map(|line| line.to_string()).collect()
@@ -30,9 +32,22 @@ pub fn part1(input: &[String]) -> u32 {
         .sum()
 }
 
+fn find_common_item_in_group(rucksacks: &[String]) -> char {
+    let mut common = rucksacks[0].chars().collect::<HashSet<_>>();
+    for rucksack in rucksacks.iter().skip(1) {
+        common.retain(|c| rucksack.contains(*c));
+    }
+    assert_eq!(common.len(), 1);
+    *common.iter().next().unwrap()
+}
+
 #[aoc(day3, part2)]
-pub fn part2(input: &[String]) -> i32 {
-    todo!()
+pub fn part2(input: &[String]) -> u32 {
+    input
+        .chunks_exact(3)
+        .map(find_common_item_in_group)
+        .map(item_priority)
+        .sum()
 }
 
 #[cfg(test)]
@@ -59,6 +74,6 @@ CrZsJsPPZsGzwwsLwLmpwMDw"
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 70);
     }
 }
