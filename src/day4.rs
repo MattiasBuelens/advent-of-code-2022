@@ -42,9 +42,18 @@ pub fn part1(input: &[(Range, Range)]) -> usize {
         .count()
 }
 
+impl Range {
+    fn overlaps(&self, other: &Range) -> bool {
+        self.begin <= other.end && other.begin <= self.end
+    }
+}
+
 #[aoc(day4, part2)]
-pub fn part2(input: &[(Range, Range)]) -> i32 {
-    todo!()
+pub fn part2(input: &[(Range, Range)]) -> usize {
+    input
+        .iter()
+        .filter(|(left, right)| left.overlaps(right))
+        .count()
 }
 
 #[cfg(test)]
@@ -72,6 +81,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 4);
     }
 }
