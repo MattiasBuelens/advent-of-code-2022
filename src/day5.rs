@@ -56,7 +56,7 @@ pub fn input_generator(input: &str) -> Input {
 }
 
 impl Move {
-    fn perform(&self, stacks: &mut Stacks) {
+    fn perform_part1(&self, stacks: &mut Stacks) {
         for _ in 1..=self.amount {
             let moved_crate = stacks.get_mut(&self.from).unwrap().pop_front().unwrap();
             stacks.get_mut(&self.to).unwrap().push_front(moved_crate);
@@ -68,7 +68,7 @@ impl Move {
 pub fn part1(input: &Input) -> String {
     let mut input = input.clone();
     for mv in input.moves {
-        mv.perform(&mut input.stacks);
+        mv.perform_part1(&mut input.stacks);
     }
     let mut result = String::new();
     for i in 1..=input.stacks.len() {
@@ -77,9 +77,27 @@ pub fn part1(input: &Input) -> String {
     result
 }
 
+impl Move {
+    fn perform_part2(&self, stacks: &mut Stacks) {
+        let moved_crates = stacks.get_mut(&self.from).unwrap().drain(0..self.amount).collect::<Vec<_>>();
+        let to_stack = stacks.get_mut(&self.to).unwrap();
+        for c in moved_crates.into_iter().rev() {
+            to_stack.push_front(c);
+        }
+    }
+}
+
 #[aoc(day5, part2)]
-pub fn part2(input: &Input) -> i32 {
-    todo!()
+pub fn part2(input: &Input) -> String {
+    let mut input = input.clone();
+    for mv in input.moves {
+        mv.perform_part2(&mut input.stacks);
+    }
+    let mut result = String::new();
+    for i in 1..=input.stacks.len() {
+        result.push(*input.stacks.get(&i).unwrap().front().unwrap());
+    }
+    result
 }
 
 #[cfg(test)]
@@ -109,6 +127,6 @@ move 1 from 1 to 2
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(&part2(&input), "MCD");
     }
 }
