@@ -24,7 +24,7 @@ pub fn input_generator(input: &str) -> Input {
             break;
         }
         let mut i = 1usize;
-        while line.len() >= 3 {
+        while !line.is_empty() {
             let (chunk, rest) = line.split_at(3);
             let stack: &mut VecDeque<char> = stacks.entry(i).or_default();
             if chunk == "   " {
@@ -64,17 +64,21 @@ impl Move {
     }
 }
 
+fn get_top(stacks: &Stacks) -> String {
+    let mut result = String::new();
+    for i in 1..=stacks.len() {
+        result.push(*stacks.get(&i).unwrap().front().unwrap());
+    }
+    result
+}
+
 #[aoc(day5, part1)]
 pub fn part1(input: &Input) -> String {
     let mut input = input.clone();
     for mv in input.moves {
         mv.perform_part1(&mut input.stacks);
     }
-    let mut result = String::new();
-    for i in 1..=input.stacks.len() {
-        result.push(*input.stacks.get(&i).unwrap().front().unwrap());
-    }
-    result
+    get_top(&input.stacks)
 }
 
 impl Move {
@@ -93,11 +97,7 @@ pub fn part2(input: &Input) -> String {
     for mv in input.moves {
         mv.perform_part2(&mut input.stacks);
     }
-    let mut result = String::new();
-    for i in 1..=input.stacks.len() {
-        result.push(*input.stacks.get(&i).unwrap().front().unwrap());
-    }
-    result
+    get_top(&input.stacks)
 }
 
 #[cfg(test)]
