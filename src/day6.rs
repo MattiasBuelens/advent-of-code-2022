@@ -14,28 +14,25 @@ fn is_marker(s: &[u8]) -> bool {
     true
 }
 
-#[aoc(day6, part1)]
-pub fn part1(input: &str) -> usize {
+fn find_marker(input: &[u8], marker_len: usize) -> usize {
     let (pos, marker) = input
-        .as_bytes()
-        .windows(PACKET_MARKER_LEN)
+        .windows(marker_len)
         .enumerate()
         .find(|(_, s)| is_marker(s))
         .unwrap();
     pos + marker.len()
 }
 
+#[aoc(day6, part1)]
+pub fn part1(input: &str) -> usize {
+    find_marker(input.as_bytes(), PACKET_MARKER_LEN)
+}
+
 const MESSAGE_MARKER_LEN: usize = 14;
 
 #[aoc(day6, part2)]
 pub fn part2(input: &str) -> usize {
-    let (pos, marker) = input
-        .as_bytes()
-        .windows(MESSAGE_MARKER_LEN)
-        .enumerate()
-        .find(|(_, s)| is_marker(s))
-        .unwrap();
-    pos + marker.len()
+    find_marker(input.as_bytes(), MESSAGE_MARKER_LEN)
 }
 
 #[cfg(test)]
