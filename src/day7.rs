@@ -7,12 +7,6 @@ pub enum Command {
     LS,
 }
 
-#[derive(Debug)]
-pub enum Listing {
-    Directory(String),
-    File(String, u64),
-}
-
 #[derive(Debug, Default)]
 pub struct Directory {
     directories: HashMap<String, Directory>,
@@ -123,10 +117,10 @@ impl FileSystem {
 
 #[aoc(day7, part1)]
 pub fn part1(input: &str) -> u64 {
-    let mut state = FileSystem::default();
-    state.process_commands(input);
+    let mut fs = FileSystem::default();
+    fs.process_commands(input);
     let mut total_size = 0u64;
-    state.root.visit(&mut |dir| {
+    fs.root.visit(&mut |dir| {
         let dir_size = dir.total_size();
         if dir_size <= 100_000 {
             total_size += dir_size;
@@ -137,15 +131,15 @@ pub fn part1(input: &str) -> u64 {
 
 #[aoc(day7, part2)]
 pub fn part2(input: &str) -> u64 {
-    let mut state = FileSystem::default();
-    state.process_commands(input);
+    let mut fs = FileSystem::default();
+    fs.process_commands(input);
 
     let total_space = 70_000_000u64;
-    let unused_space = total_space - state.root.total_size();
+    let unused_space = total_space - fs.root.total_size();
     let needed_unused_space = 30_000_000u64;
 
     let mut smallest_candidate: Option<u64> = None;
-    state.root.visit(&mut |dir| {
+    fs.root.visit(&mut |dir| {
         let dir_size = dir.total_size();
         if unused_space + dir_size >= needed_unused_space {
             smallest_candidate = Some(match smallest_candidate {
