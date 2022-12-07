@@ -38,7 +38,7 @@ impl FromStr for Command {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct FileSystem {
     current_directory: Vec<String>,
     root: Directory,
@@ -91,37 +91,40 @@ impl Directory {
     }
 }
 
-#[aoc(day7, part1)]
-pub fn part1(input: &str) -> u64 {
-    let mut state = FileSystem {
-        current_directory: Vec::new(),
-        root: Directory::default(),
-    };
-    let mut lines = input.lines().into_iter().peekable();
-    while let Some(command) = lines.next() {
-        match command.parse().unwrap() {
-            Command::CD(dir) => {
-                state.change_directory(&dir);
-            }
-            Command::LS => {
-                let current_directory = state.current_directory_mut();
-                while let Some(line) = lines.next_if(|s| !s.starts_with('$')) {
-                    if let Some(dir) = line.strip_prefix("dir ") {
-                        current_directory
-                            .directories
-                            .entry(dir.to_string())
-                            .or_default();
-                    } else if let Some((size, name)) = line.split_once(' ') {
-                        current_directory
-                            .files
-                            .push((name.to_string(), size.parse().unwrap()));
-                    } else {
-                        panic!("unknown listing: {}", line);
+impl FileSystem {
+    fn process_commands(&mut self, input: &str) {
+        let mut lines = input.lines().into_iter().peekable();
+        while let Some(command) = lines.next() {
+            match command.parse().unwrap() {
+                Command::CD(dir) => {
+                    self.change_directory(&dir);
+                }
+                Command::LS => {
+                    let current_directory = self.current_directory_mut();
+                    while let Some(line) = lines.next_if(|s| !s.starts_with('$')) {
+                        if let Some(dir) = line.strip_prefix("dir ") {
+                            current_directory
+                                .directories
+                                .entry(dir.to_string())
+                                .or_default();
+                        } else if let Some((size, name)) = line.split_once(' ') {
+                            current_directory
+                                .files
+                                .push((name.to_string(), size.parse().unwrap()));
+                        } else {
+                            panic!("unknown listing: {}", line);
+                        }
                     }
                 }
             }
         }
     }
+}
+
+#[aoc(day7, part1)]
+pub fn part1(input: &str) -> u64 {
+    let mut state = FileSystem::default();
+    state.process_commands(input);
     let mut total_size = 0u64;
     state.root.visit(&mut |dir| {
         let dir_size = dir.total_size();
