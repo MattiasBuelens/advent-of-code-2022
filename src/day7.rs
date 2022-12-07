@@ -137,7 +137,25 @@ pub fn part1(input: &str) -> u64 {
 
 #[aoc(day7, part2)]
 pub fn part2(input: &str) -> u64 {
-    todo!()
+    let mut state = FileSystem::default();
+    state.process_commands(input);
+
+    let total_space = 70_000_000u64;
+    let unused_space = total_space - state.root.total_size();
+    let needed_unused_space = 30_000_000u64;
+
+    let mut smallest_candidate: Option<u64> = None;
+    state.root.visit(&mut |dir| {
+        let dir_size = dir.total_size();
+        if unused_space + dir_size >= needed_unused_space {
+            smallest_candidate = Some(match smallest_candidate {
+                Some(prev_size) if prev_size <= dir_size => prev_size,
+                _ => dir_size,
+            });
+        }
+    });
+
+    smallest_candidate.expect("no candidate found")
 }
 
 #[cfg(test)]
@@ -181,6 +199,6 @@ $ ls
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 24933642);
     }
 }
