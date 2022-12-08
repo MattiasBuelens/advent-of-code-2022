@@ -62,9 +62,38 @@ pub fn part1(input: &Forest) -> usize {
     input.count_visible()
 }
 
+impl Forest {
+    fn scenic_score(&self, tree_pos: Vector2D) -> u64 {
+        self.viewing_distance(tree_pos, Vector2D::new(0, 1))
+            * self.viewing_distance(tree_pos, Vector2D::new(0, -1))
+            * self.viewing_distance(tree_pos, Vector2D::new(1, 0))
+            * self.viewing_distance(tree_pos, Vector2D::new(-1, 0))
+    }
+
+    fn viewing_distance(&self, tree_pos: Vector2D, dir: Vector2D) -> u64 {
+        let tree = *self.trees.get(&tree_pos).unwrap();
+        let mut viewing_distance = 0;
+        let mut pos = tree_pos + dir;
+        while (0..self.width).contains(&pos.x()) && (0..self.height).contains(&pos.y()) {
+            viewing_distance += 1;
+            let other_tree = *self.trees.get(&pos).unwrap();
+            if other_tree >= tree {
+                break;
+            }
+            pos += dir;
+        }
+        viewing_distance
+    }
+}
+
 #[aoc(day8, part2)]
-pub fn part2(input: &Forest) -> i32 {
-    todo!()
+pub fn part2(input: &Forest) -> u64 {
+    input
+        .trees
+        .keys()
+        .map(|&pos| input.scenic_score(pos))
+        .max()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -90,6 +119,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 8);
     }
 }
