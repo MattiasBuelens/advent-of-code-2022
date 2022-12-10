@@ -92,8 +92,28 @@ pub fn part1(input: &[Instruction]) -> i32 {
 }
 
 #[aoc(day10, part2)]
-pub fn part2(input: &[Instruction]) -> i32 {
-    todo!()
+pub fn part2(input: &[Instruction]) -> String {
+    let mut screen = [[' '; 40]; 6];
+    let mut cpu = CPU::new(input.to_vec());
+    for y in 0..screen.len() {
+        let row = &mut screen[y];
+        for x in 0..row.len() {
+            let value = cpu.step();
+            row[x] = if value >= (x as i32) - 1 && value <= (x as i32) + 1 {
+                '#'
+            } else {
+                '.'
+            };
+        }
+    }
+    screen
+        .into_iter()
+        .map(|row| {
+            let mut row = row.into_iter().collect::<String>();
+            row.push('\n');
+            row
+        })
+        .collect::<String>()
 }
 
 #[cfg(test)]
@@ -140,6 +160,17 @@ addx -5"
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(
+            part2(&input),
+            r"
+##..##..##..##..##..##..##..##..##..##..
+###...###...###...###...###...###...###.
+####....####....####....####....####....
+#####.....#####.....#####.....#####.....
+######......######......######......####
+#######.......#######.......#######.....
+"
+            .trim_start()
+        );
     }
 }
