@@ -5,7 +5,6 @@ use crate::util::lcm_64;
 
 #[derive(Debug, Clone)]
 pub struct Monkey {
-    number: usize,
     items: Vec<i64>,
     operation: Operation,
     test: i64,
@@ -26,12 +25,12 @@ pub fn input_generator(input: &str) -> Vec<Monkey> {
     let mut monkeys = Vec::new();
     for block in input.split("\n\n") {
         let mut lines = block.lines();
-        let number = lines
+        let _number = lines
             .next()
             .unwrap()
             .strip_prefix("Monkey ")
             .unwrap()
-            .strip_suffix(":")
+            .strip_suffix(':')
             .unwrap();
         let items = lines
             .next()
@@ -71,7 +70,6 @@ pub fn input_generator(input: &str) -> Vec<Monkey> {
             .strip_prefix("    If false: throw to monkey ")
             .unwrap();
         monkeys.push(Monkey {
-            number: number.parse().unwrap(),
             items,
             operation,
             test: test.parse().unwrap(),
@@ -111,11 +109,10 @@ impl Game {
     fn turn(&mut self, monkey_number: usize) {
         let monkey: &mut Monkey = &mut self.monkeys[monkey_number];
         // Mutate monkey first
-        let items = mem::replace(&mut monkey.items, Vec::new());
+        let items = mem::take(&mut monkey.items);
         monkey.total_inspected += items.len();
         // Mutate other monkeys
         let &Monkey {
-            number,
             operation,
             test,
             throw_if_true,

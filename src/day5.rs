@@ -40,18 +40,18 @@ pub fn input_generator(input: &str) -> Input {
             i += 1;
         }
     }
-    let moves = move_text.trim().lines().map(|line| {
-        match line.split(' ').collect::<Vec<_>>()[..] {
-            [_, amount, _, from, _, to, ..] => {
-                Move {
-                    amount: amount.parse().unwrap(),
-                    from: from.parse().unwrap(),
-                    to: to.parse().unwrap(),
-                }
-            }
-            _ => panic!("invalid move: {}", line)
-        }
-    }).collect();
+    let moves = move_text
+        .trim()
+        .lines()
+        .map(|line| match line.split(' ').collect::<Vec<_>>()[..] {
+            [_, amount, _, from, _, to, ..] => Move {
+                amount: amount.parse().unwrap(),
+                from: from.parse().unwrap(),
+                to: to.parse().unwrap(),
+            },
+            _ => panic!("invalid move: {}", line),
+        })
+        .collect();
     Input { stacks, moves }
 }
 
@@ -83,7 +83,11 @@ pub fn part1(input: &Input) -> String {
 
 impl Move {
     fn perform_part2(&self, stacks: &mut Stacks) {
-        let moved_crates = stacks.get_mut(&self.from).unwrap().drain(0..self.amount).collect::<Vec<_>>();
+        let moved_crates = stacks
+            .get_mut(&self.from)
+            .unwrap()
+            .drain(0..self.amount)
+            .collect::<Vec<_>>();
         let to_stack = stacks.get_mut(&self.to).unwrap();
         for c in moved_crates.into_iter().rev() {
             to_stack.push_front(c);

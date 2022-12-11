@@ -78,7 +78,7 @@ impl Directory {
     }
 
     fn visit(&self, visitor: &mut impl FnMut(&Directory) -> ()) {
-        visitor(&self);
+        visitor(self);
         for (_, dir) in self.directories.iter() {
             dir.visit(visitor);
         }

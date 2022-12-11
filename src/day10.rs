@@ -95,11 +95,10 @@ pub fn part1(input: &[Instruction]) -> i32 {
 pub fn part2(input: &[Instruction]) -> String {
     let mut screen = [[' '; 40]; 6];
     let mut cpu = CPU::new(input.to_vec());
-    for y in 0..screen.len() {
-        let row = &mut screen[y];
-        for x in 0..row.len() {
+    for row in screen.iter_mut() {
+        for (x, c) in row.iter_mut().enumerate() {
             let value = cpu.step();
-            row[x] = if value >= (x as i32) - 1 && value <= (x as i32) + 1 {
+            *c = if value >= (x as i32) - 1 && value <= (x as i32) + 1 {
                 '#'
             } else {
                 '.'

@@ -13,7 +13,7 @@ pub struct Forest {
 pub fn input_generator(input: &str) -> Forest {
     let height = input.lines().count() as i32;
     let width = input.lines().next().unwrap().len() as i32;
-    let mut trees = input
+    let trees = input
         .lines()
         .enumerate()
         .flat_map(|(y, line)| {

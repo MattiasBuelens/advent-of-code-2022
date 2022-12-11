@@ -27,7 +27,7 @@ fn item_priority(item: char) -> u32 {
 pub fn part1(input: &[String]) -> u32 {
     input
         .iter()
-        .map(|rucksack| find_shared_item(&rucksack))
+        .map(|rucksack| find_shared_item(rucksack))
         .map(item_priority)
         .sum()
 }
