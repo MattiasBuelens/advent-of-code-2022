@@ -26,7 +26,7 @@ pub fn input_generator(input: &str) -> Vec<Instruction> {
 }
 
 #[derive(Debug)]
-struct CPU {
+struct Cpu {
     program: Vec<Instruction>,
     pc: usize,
     current_instruction: Option<Instruction>,
@@ -34,7 +34,7 @@ struct CPU {
     x: i32,
 }
 
-impl CPU {
+impl Cpu {
     fn new(program: Vec<Instruction>) -> Self {
         Self {
             program,
@@ -80,7 +80,7 @@ impl CPU {
 
 #[aoc(day10, part1)]
 pub fn part1(input: &[Instruction]) -> i32 {
-    let mut cpu = CPU::new(input.to_vec());
+    let mut cpu = Cpu::new(input.to_vec());
     let mut sum = 0;
     for cycle in 1..=220 {
         let x = cpu.step();
@@ -94,7 +94,7 @@ pub fn part1(input: &[Instruction]) -> i32 {
 #[aoc(day10, part2)]
 pub fn part2(input: &[Instruction]) -> String {
     let mut screen = [[' '; 40]; 6];
-    let mut cpu = CPU::new(input.to_vec());
+    let mut cpu = Cpu::new(input.to_vec());
     for row in screen.iter_mut() {
         for (x, c) in row.iter_mut().enumerate() {
             let value = cpu.step();
@@ -132,7 +132,7 @@ addx 3
 addx -5"
                 .trim(),
         );
-        let mut cpu = CPU::new(input);
+        let mut cpu = Cpu::new(input);
         cpu.step();
         assert_eq!(cpu.remaining_cycles, 0);
         assert_eq!(cpu.x, 1);
