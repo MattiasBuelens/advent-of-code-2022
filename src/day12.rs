@@ -41,23 +41,25 @@ pub fn input_generator(input: &str) -> HeightMap {
     }
 }
 
+fn get_neighbours(map: &HeightMap, pos: Vector2D) -> Vec<(Vector2D, i32)> {
+    pos.neighbours()
+        .filter_map(|neighbour| {
+            let current = map.squares.get(&pos).copied().unwrap();
+            let next = map.squares.get(&neighbour).copied()?;
+            if next - current <= 1 {
+                Some((neighbour, 1))
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>()
+}
+
 #[aoc(day12, part1)]
 pub fn part1(input: &HeightMap) -> i32 {
     let (_path, steps) = dijkstra(
         &input.start,
-        |pos| {
-            pos.neighbours()
-                .filter_map(|neighbour| {
-                    let current = input.squares.get(pos).copied().unwrap();
-                    let next = input.squares.get(&neighbour).copied()?;
-                    if next - current <= 1 {
-                        Some((neighbour, 1))
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>()
-        },
+        |&pos| get_neighbours(input, pos),
         |pos| pos == &input.goal,
     )
     .expect("no path found");
@@ -66,7 +68,31 @@ pub fn part1(input: &HeightMap) -> i32 {
 
 #[aoc(day12, part2)]
 pub fn part2(input: &HeightMap) -> i32 {
-    todo!()
+    let start_marker = Vector2D::new(-1, -1);
+    let (_path, steps) = dijkstra(
+        &start_marker,
+        |&pos| {
+            if pos == start_marker {
+                input
+                    .squares
+                    .iter()
+                    .filter_map(|(&pos, &elevation)| {
+                        if elevation == 0 {
+                            // Moving from the start marker to a real starting point is free.
+                            Some((pos, 0))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                get_neighbours(input, pos)
+            }
+        },
+        |pos| pos == &input.goal,
+    )
+    .expect("no path found");
+    steps
 }
 
 #[cfg(test)]
@@ -92,6 +118,6 @@ abdefghi"
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 29);
     }
 }
