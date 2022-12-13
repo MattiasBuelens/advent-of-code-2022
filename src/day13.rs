@@ -113,8 +113,28 @@ pub fn part1(input: &Input) -> usize {
 }
 
 #[aoc(day13, part2)]
-pub fn part2(input: &Input) -> i32 {
-    todo!()
+pub fn part2(input: &Input) -> usize {
+    let mut all_packets = input
+        .clone()
+        .into_iter()
+        .flat_map(|(left, right)| [left, right].into_iter())
+        .collect::<Vec<_>>();
+    let divider1 = Packet::List(vec![Packet::List(vec![Packet::Number(2)])]);
+    let divider2 = Packet::List(vec![Packet::List(vec![Packet::Number(6)])]);
+    all_packets.push(divider1.clone());
+    all_packets.push(divider2.clone());
+    all_packets.sort_unstable();
+    let pos1 = all_packets
+        .iter()
+        .position(|packet| packet == &divider1)
+        .unwrap()
+        + 1;
+    let pos2 = all_packets
+        .iter()
+        .position(|packet| packet == &divider2)
+        .unwrap()
+        + 1;
+    pos1 * pos2
 }
 
 #[cfg(test)]
@@ -158,6 +178,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 140);
     }
 }
