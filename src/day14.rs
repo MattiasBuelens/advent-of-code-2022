@@ -33,18 +33,25 @@ fn place_rocks(rocks: &Input) -> Cave {
     rocks
         .iter()
         .flat_map(|rock| {
-            array_windows::<_, 2>(&rock).flat_map(|&[start, end]| make_line(start, end))
+            array_windows::<_, 2>(rock).flat_map(|&[start, end]| make_line(start, end))
         })
         .collect()
 }
 
-fn drop_sand(cave: &Cave, source: Vector2D) -> Option<Vector2D> {
+fn drop_sand(cave: &Cave, source: Vector2D, floor: Option<i32>) -> Option<Vector2D> {
     let max_y = cave.iter().map(|pos| pos.y()).max().unwrap();
     let mut pos = source;
     loop {
-        if pos.y() > max_y {
-            // Into the void
-            return None;
+        if let Some(floor) = floor {
+            // Part 2: fall on the floor
+            if pos.y() == floor - 1 {
+                return Some(pos);
+            }
+        } else {
+            // Part 1: fall into the void
+            if pos.y() > max_y {
+                return None;
+            }
         }
         let down = pos + Vector2D::new(0, 1);
         if !cave.contains(&down) {
@@ -74,7 +81,7 @@ pub fn part1(input: &Input) -> i32 {
     let mut cave = place_rocks(input);
     let source = Vector2D::new(500, 0);
     let mut sand_count = 0;
-    while let Some(sand_pos) = drop_sand(&cave, source) {
+    while let Some(sand_pos) = drop_sand(&cave, source, None) {
         cave.insert(sand_pos);
         sand_count += 1;
     }
@@ -83,7 +90,18 @@ pub fn part1(input: &Input) -> i32 {
 
 #[aoc(day14, part2)]
 pub fn part2(input: &Input) -> i32 {
-    todo!()
+    let mut cave = place_rocks(input);
+    let floor = cave.iter().map(|pos| pos.y()).max().unwrap() + 2;
+    let source = Vector2D::new(500, 0);
+    let mut sand_count = 0;
+    while let Some(sand_pos) = drop_sand(&cave, source, Some(floor)) {
+        cave.insert(sand_pos);
+        sand_count += 1;
+        if sand_pos == source {
+            break;
+        }
+    }
+    sand_count
 }
 
 #[cfg(test)]
@@ -106,6 +124,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 93);
     }
 }
