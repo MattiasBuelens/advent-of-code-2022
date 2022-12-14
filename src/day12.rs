@@ -31,7 +31,7 @@ pub fn input_generator(input: &str) -> HeightMap {
                 }
                 _ => panic!("invalid elevation: {}", c),
             };
-            squares.insert(pos, ((elevation as u8) - ('a' as u8)) as i8);
+            squares.insert(pos, ((elevation as u8) - b'a') as i8);
         }
     }
     HeightMap {

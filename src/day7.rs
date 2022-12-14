@@ -77,7 +77,7 @@ impl Directory {
                 .sum::<u64>()
     }
 
-    fn visit(&self, visitor: &mut impl FnMut(&Directory) -> ()) {
+    fn visit(&self, visitor: &mut impl FnMut(&Directory)) {
         visitor(self);
         for (_, dir) in self.directories.iter() {
             dir.visit(visitor);
