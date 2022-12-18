@@ -1,4 +1,6 @@
+use std::array::from_fn;
 use std::collections::{HashMap, HashSet};
+use std::mem;
 
 use pathfinding::prelude::dijkstra;
 
@@ -27,6 +29,14 @@ pub fn input_generator(input: &str) -> Vec<Valve> {
                 tunnels: tunnels.split(", ").map(|x| x.to_string()).collect(),
             }
         })
+        .collect()
+}
+
+fn make_valve_map(valves: &[Valve]) -> HashMap<String, Valve> {
+    valves
+        .into_iter()
+        .cloned()
+        .map(|valve| (valve.name.clone(), valve))
         .collect()
 }
 
@@ -63,110 +73,181 @@ fn make_distance_map(valves: &HashMap<String, Valve>) -> DistanceMap {
 }
 
 #[derive(Debug, Clone)]
-struct State {
+enum Action {
+    Idle(String),
+    Moving(String, String, u32),
+}
+
+#[derive(Debug, Clone)]
+struct State<const N: usize> {
     time: u32,
     max_time: u32,
-    position: String,
+    actions: [Action; N],
     open_valves: HashSet<String>,
     total_flow_rate: u32,
     released_pressure: u32,
 }
 
-impl State {
+impl<const N: usize> State<N> {
     fn new(position: String, max_time: u32) -> Self {
         Self {
             time: 0,
             max_time,
-            position,
+            actions: from_fn(|_| Action::Idle(position.clone())),
             open_valves: HashSet::new(),
             total_flow_rate: 0,
             released_pressure: 0,
         }
     }
 
-    fn successors(&self, valves: &HashMap<String, Valve>, distances: &DistanceMap) -> Vec<State> {
-        let mut successors = Vec::new();
+    fn successors(
+        &self,
+        valves: &HashMap<String, Valve>,
+        distances: &DistanceMap,
+    ) -> Vec<State<N>> {
         if self.time == self.max_time {
             // Time's up! No more steps.
-            return successors;
+            return Vec::new();
         }
-        // Move to closed valve and open it
-        let closed_valves = valves
-            .keys()
-            .filter(|&name| !self.open_valves.contains(name));
-        successors.extend(closed_valves.filter_map(|valve_name| {
-            let valve = valves.get(valve_name).unwrap();
-            if valve.flow_rate == 0 {
-                // No point in opening this valve
-                return None;
-            }
-            // N time steps to move to valve
-            let distance = *distances
-                .get(&(self.position.clone(), valve_name.clone()))
-                .unwrap();
-            // 1 time step to open it
-            let distance = distance + 1;
-            if self.time + distance >= self.max_time {
-                // Can't get to valve in time
-                return None;
-            }
-            let mut next = self.clone();
-            next.time += distance;
-            next.released_pressure += distance * next.total_flow_rate;
-            next.position = valve_name.clone();
-            next.open_valves.insert(valve_name.clone());
-            next.total_flow_rate += valve.flow_rate;
-            Some(next)
-        }));
-        // Otherwise, stay here indefinitely
-        if successors.is_empty() {
-            successors.push({
-                let remaining_time = self.max_time - self.time;
-                let mut next = self.clone();
-                next.time += remaining_time;
-                next.released_pressure += remaining_time * next.total_flow_rate;
-                next
-            });
+        // Update each actor
+        let mut states = vec![self.clone()];
+        for actor_idx in 0..N {
+            states = states
+                .into_iter()
+                .flat_map(|state| {
+                    state
+                        .next_actions(actor_idx, valves, distances)
+                        .into_iter()
+                        .map(move |next_action| {
+                            let mut next = state.clone();
+                            next.actions[actor_idx] = next_action;
+                            next
+                        })
+                })
+                .collect()
         }
-        return successors;
+        // Tick the time
+        for state in states.iter_mut() {
+            state.tick(valves);
+        }
+        return states;
+    }
+
+    fn next_actions(
+        &self,
+        actor_idx: usize,
+        valves: &HashMap<String, Valve>,
+        distances: &DistanceMap,
+    ) -> Vec<Action> {
+        // Ensure actor is idle
+        let pos = match &self.actions[actor_idx] {
+            Action::Idle(pos) => pos.clone(),
+            action => return vec![action.clone()],
+        };
+        // Try to move to each closed valve and open it
+        let mut actions = valves
+            .iter()
+            .flat_map(|(valve_name, valve)| {
+                // No point in opening a jammed valve
+                if valve.flow_rate == 0 {
+                    return None;
+                }
+                // Don't go to an already opened valve
+                if self.open_valves.contains(valve_name) {
+                    return None;
+                }
+                // Don't go to a closed valve if someone is already going there
+                for action in &self.actions {
+                    if let Action::Moving(_, to, _) = action {
+                        if to == valve_name {
+                            return None;
+                        }
+                    }
+                }
+                // N time steps to move to valve
+                let distance = *distances.get(&(pos.clone(), valve_name.clone())).unwrap();
+                // 1 time step to open it
+                let distance = distance + 1;
+                if self.time + distance >= self.max_time {
+                    // Not enough time to open valve
+                    return None;
+                }
+                return Some(Action::Moving(pos.clone(), valve_name.clone(), distance));
+            })
+            .collect::<Vec<_>>();
+        // If actor cannot move to any valve, stay idle
+        if actions.is_empty() {
+            actions.push(Action::Idle(pos.clone()));
+        }
+        actions
+    }
+
+    fn tick(&mut self, valves: &HashMap<String, Valve>) {
+        self.time += 1;
+        self.released_pressure += self.total_flow_rate;
+        for action in self.actions.as_mut() {
+            *action = match mem::replace(action, Action::Idle(String::new())) {
+                Action::Moving(_, to, distance) if distance == 1 => {
+                    // Open the valve
+                    let valve = valves.get(&to).unwrap();
+                    self.open_valves.insert(to.clone());
+                    self.total_flow_rate += valve.flow_rate;
+                    // Return to idle
+                    Action::Idle(to)
+                }
+                Action::Moving(from, to, distance) => {
+                    // Keep moving
+                    Action::Moving(from, to, distance - 1)
+                }
+                Action::Idle(pos) => Action::Idle(pos),
+            };
+        }
+    }
+
+    fn solve(self, valves: &HashMap<String, Valve>, distances: &DistanceMap) -> Option<Self> {
+        let max_time = self.max_time;
+        let mut queue = Vec::<Self>::new();
+        queue.push(self);
+        let mut best_state: Option<Self> = None;
+        while let Some(state) = queue.pop() {
+            for next in state.successors(&valves, &distances) {
+                if next.time == max_time {
+                    match &best_state {
+                        Some(best) if best.released_pressure >= next.released_pressure => {
+                            // Current best is still the best.
+                        }
+                        _ => {
+                            best_state = Some(next);
+                        }
+                    };
+                } else {
+                    queue.push(next);
+                }
+            }
+        }
+        best_state
     }
 }
 
 #[aoc(day16, part1)]
 pub fn part1(input: &[Valve]) -> u32 {
-    let valves = input
-        .into_iter()
-        .cloned()
-        .map(|valve| (valve.name.clone(), valve))
-        .collect::<HashMap<_, _>>();
+    let valves = make_valve_map(input);
     let distances = make_distance_map(&valves);
     let max_time = 30;
-    let start_state = State::new("AA".to_string(), max_time);
-    let mut queue = Vec::<State>::new();
-    queue.push(start_state);
-    let mut best_state: Option<State> = None;
-    while let Some(state) = queue.pop() {
-        for next in state.successors(&valves, &distances) {
-            if next.time == max_time {
-                match &best_state {
-                    Some(best) if best.released_pressure >= next.released_pressure => {
-                        // Current best is still the best.
-                    }
-                    _ => {
-                        best_state = Some(next);
-                    }
-                };
-            } else {
-                queue.push(next);
-            }
-        }
-    }
-    best_state.unwrap().released_pressure
+    let start_state = State::<1>::new("AA".to_string(), max_time);
+    let best_state = start_state.solve(&valves, &distances).unwrap();
+    best_state.released_pressure
 }
 
 #[aoc(day16, part2)]
-pub fn part2(input: &[Valve]) -> i32 {
-    todo!()
+pub fn part2(input: &[Valve]) -> u32 {
+    let valves = make_valve_map(input);
+    let distances = make_distance_map(&valves);
+    let max_time = 26;
+    let start_state = State::<2>::new("AA".to_string(), max_time);
+    let best_state = start_state.solve(&valves, &distances).unwrap();
+    dbg!(&best_state);
+    best_state.released_pressure
 }
 
 #[cfg(test)]
@@ -197,6 +278,6 @@ Valve JJ has flow rate=21; tunnel leads to valve II"
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 1707);
     }
 }
