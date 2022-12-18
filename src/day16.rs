@@ -90,14 +90,6 @@ impl State {
             // Time's up! No more steps.
             return successors;
         }
-        // Stay here indefinitely
-        successors.push({
-            let remaining_time = self.max_time - self.time;
-            let mut next = self.clone();
-            next.time += remaining_time;
-            next.released_pressure += remaining_time * next.total_flow_rate;
-            next
-        });
         // Move to closed valve and open it
         let closed_valves = valves
             .keys()
@@ -126,6 +118,16 @@ impl State {
             next.total_flow_rate += valve.flow_rate;
             Some(next)
         }));
+        // Otherwise, stay here indefinitely
+        if successors.is_empty() {
+            successors.push({
+                let remaining_time = self.max_time - self.time;
+                let mut next = self.clone();
+                next.time += remaining_time;
+                next.released_pressure += remaining_time * next.total_flow_rate;
+                next
+            });
+        }
         return successors;
     }
 }
