@@ -2,7 +2,7 @@ use std::array::from_fn;
 use std::collections::{HashMap, HashSet};
 use std::mem;
 
-use pathfinding::prelude::dijkstra;
+use pathfinding::directed::dijkstra::dijkstra_all;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub struct Valve {
@@ -44,29 +44,17 @@ type DistanceMap = HashMap<(String, String), u32>;
 
 fn make_distance_map(valves: &HashMap<String, Valve>) -> DistanceMap {
     let mut map = DistanceMap::new();
-    for (left_name, left) in valves {
-        map.insert((left_name.clone(), left_name.clone()), 0);
-        for (right_name, right) in valves {
-            if left_name == right_name {
-                continue;
-            }
-            if map.contains_key(&(left_name.clone(), right_name.clone())) {
-                continue;
-            }
-            let (_path, distance) = dijkstra(
-                left,
-                |valve| {
-                    valve
-                        .tunnels
-                        .iter()
-                        .map(|next| (valves.get(next).unwrap().clone(), 1))
-                        .collect::<Vec<_>>()
-                },
-                |valve| valve == right,
-            )
-            .unwrap();
-            map.insert((left_name.clone(), right_name.clone()), distance);
-            map.insert((right_name.clone(), left_name.clone()), distance);
+    for start in valves.values() {
+        map.insert((start.name.clone(), start.name.clone()), 0);
+        for (dest, (_, distance)) in dijkstra_all(start, |valve| {
+            valve
+                .tunnels
+                .iter()
+                .map(|next| (valves.get(next).unwrap().clone(), 1))
+                .collect::<Vec<_>>()
+        }) {
+            map.insert((start.name.clone(), dest.name.clone()), distance);
+            map.insert((dest.name.clone(), start.name.clone()), distance);
         }
     }
     map
