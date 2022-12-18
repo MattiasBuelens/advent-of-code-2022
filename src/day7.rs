@@ -72,8 +72,8 @@ impl Directory {
         self.files.iter().map(|(_, size)| *size).sum::<u64>()
             + self
                 .directories
-                .iter()
-                .map(|(_, dir)| dir.total_size())
+                .values()
+                .map(|dir| dir.total_size())
                 .sum::<u64>()
     }
 

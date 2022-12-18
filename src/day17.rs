@@ -112,7 +112,7 @@ impl Tower {
         }
     }
 
-    fn drop_rock(&self, rock: RockType, jets: &mut impl Iterator<Item=(usize, Jet)>) -> Vector2D {
+    fn drop_rock(&self, rock: RockType, jets: &mut impl Iterator<Item = (usize, Jet)>) -> Vector2D {
         let mut pos = Vector2D::new(2, self.height + 3);
         loop {
             // Push left or right, if possible
