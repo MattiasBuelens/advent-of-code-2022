@@ -65,18 +65,18 @@ fn make_distance_map(valves: &HashMap<String, Valve>) -> DistanceMap {
 #[derive(Debug, Clone)]
 struct State {
     time: u32,
+    max_time: u32,
     position: String,
     open_valves: HashSet<String>,
     total_flow_rate: u32,
     released_pressure: u32,
 }
 
-const MAX_TIME: u32 = 30;
-
 impl State {
-    fn new(position: String) -> Self {
+    fn new(position: String, max_time: u32) -> Self {
         Self {
             time: 0,
+            max_time,
             position,
             open_valves: HashSet::new(),
             total_flow_rate: 0,
@@ -86,13 +86,13 @@ impl State {
 
     fn successors(&self, valves: &HashMap<String, Valve>, distances: &DistanceMap) -> Vec<State> {
         let mut successors = Vec::new();
-        if self.time == MAX_TIME {
+        if self.time == self.max_time {
             // Time's up! No more steps.
             return successors;
         }
         // Stay here indefinitely
         successors.push({
-            let remaining_time = MAX_TIME - self.time;
+            let remaining_time = self.max_time - self.time;
             let mut next = self.clone();
             next.time += remaining_time;
             next.released_pressure += remaining_time * next.total_flow_rate;
@@ -114,7 +114,7 @@ impl State {
                 .unwrap();
             // 1 time step to open it
             let distance = distance + 1;
-            if self.time + distance >= MAX_TIME {
+            if self.time + distance >= self.max_time {
                 // Can't get to valve in time
                 return None;
             }
@@ -138,13 +138,14 @@ pub fn part1(input: &[Valve]) -> u32 {
         .map(|valve| (valve.name.clone(), valve))
         .collect::<HashMap<_, _>>();
     let distances = make_distance_map(&valves);
-    let start_state = State::new("AA".to_string());
+    let max_time = 30;
+    let start_state = State::new("AA".to_string(), max_time);
     let mut queue = Vec::<State>::new();
     queue.push(start_state);
     let mut best_state: Option<State> = None;
     while let Some(state) = queue.pop() {
         for next in state.successors(&valves, &distances) {
-            if next.time == MAX_TIME {
+            if next.time == max_time {
                 match &best_state {
                     Some(best) if best.released_pressure >= next.released_pressure => {
                         // Current best is still the best.
