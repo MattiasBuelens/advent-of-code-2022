@@ -9,7 +9,7 @@ pub struct Vector<const N: usize> {
 #[allow(dead_code)]
 impl<const N: usize> Vector<N> {
     #[inline]
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Self { coords: [0i32; N] }
     }
 
@@ -163,8 +163,8 @@ pub type Vector2D = Vector<2>;
 
 #[allow(dead_code)]
 impl Vector2D {
-    pub fn new(x: i32, y: i32) -> Self {
-        Self::from([x, y])
+    pub const fn new(x: i32, y: i32) -> Self {
+        Self { coords: [x, y] }
     }
 
     #[inline]
@@ -216,8 +216,8 @@ pub type Vector3D = Vector<3>;
 
 #[allow(dead_code)]
 impl Vector3D {
-    pub fn new(x: i32, y: i32, z: i32) -> Self {
-        Self::from([x, y, z])
+    pub const fn new(x: i32, y: i32, z: i32) -> Self {
+        Self { coords: [x, y, z] }
     }
 
     #[inline]
