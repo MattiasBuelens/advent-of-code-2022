@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 
 use crate::util::Vector3D;
 
@@ -31,8 +31,43 @@ pub fn part1(input: &[Vector3D]) -> u64 {
 }
 
 #[aoc(day18, part2)]
-pub fn part2(input: &[Vector3D]) -> i32 {
-    todo!()
+pub fn part2(input: &[Vector3D]) -> u64 {
+    let max_coord = input
+        .iter()
+        .flat_map(|cube| cube.coords.into_iter())
+        .max()
+        .unwrap();
+    let cubes = input.into_iter().cloned().collect::<HashSet<_>>();
+    // Flood-fill to find all exterior cubes
+    let mut queue = VecDeque::from([Vector3D::zero()]);
+    let mut exterior = HashSet::new();
+    while let Some(pos) = queue.pop_front() {
+        for neighbour in pos.neighbours() {
+            if exterior.contains(&neighbour) {
+                // Already visited
+            } else if cubes.contains(&neighbour) {
+                // Cube is internal
+            } else if neighbour
+                .coords
+                .iter()
+                .all(|&coord| coord >= -1 && coord <= max_coord + 1)
+            {
+                // Expand steam around droplet
+                exterior.insert(neighbour);
+                queue.push_back(neighbour);
+            }
+        }
+    }
+    // Count the area
+    let mut area = 0;
+    for cube in &cubes {
+        for neighbour in cube.neighbours() {
+            if exterior.contains(&neighbour) {
+                area += 1;
+            }
+        }
+    }
+    area
 }
 
 #[cfg(test)]
@@ -66,6 +101,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 58);
     }
 }
