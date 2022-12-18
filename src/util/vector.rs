@@ -243,6 +243,18 @@ impl Vector3D {
             self.x() * other.y() - self.y() * other.x(),
         )
     }
+
+    pub fn neighbours(self) -> impl Iterator<Item = Self> {
+        [
+            self + Vector3D::new(-1, 0, 0),
+            self + Vector3D::new(1, 0, 0),
+            self + Vector3D::new(0, -1, 0),
+            self + Vector3D::new(0, 1, 0),
+            self + Vector3D::new(0, 0, -1),
+            self + Vector3D::new(0, 0, 1),
+        ]
+        .into_iter()
+    }
 }
 
 #[cfg(test)]
