@@ -111,6 +111,29 @@ impl Tower {
             self.blocks.insert(block);
         }
     }
+
+    fn drop_rock(&mut self, rock: RockType, jets: &mut impl Iterator<Item = Jet>) {
+        let mut pos = Vector2D::new(2, self.height + 3);
+        loop {
+            // Push left or right, if possible
+            let jet = jets.next().unwrap();
+            let next_pos = match jet {
+                Jet::Left => pos + Vector2D::new(-1, 0),
+                Jet::Right => pos + Vector2D::new(1, 0),
+            };
+            if !self.overlaps(rock, next_pos) {
+                pos = next_pos;
+            }
+            // Drop down
+            let next_pos = pos + Vector2D::new(0, -1);
+            if self.overlaps(rock, next_pos) {
+                // Landed
+                break;
+            }
+            pos = next_pos;
+        }
+        self.place_rock(rock, pos)
+    }
 }
 
 #[aoc(day17, part1)]
@@ -120,26 +143,7 @@ pub fn part1(input: &[Jet]) -> i32 {
     let mut jets = input.iter().cloned().cycle();
     for _ in 0..2022 {
         let rock = rocks.next().unwrap();
-        let mut pos = Vector2D::new(2, tower.height + 3);
-        loop {
-            // Push left or right, if possible
-            let jet = jets.next().unwrap();
-            let next_pos = match jet {
-                Jet::Left => pos + Vector2D::new(-1, 0),
-                Jet::Right => pos + Vector2D::new(1, 0),
-            };
-            if !tower.overlaps(rock, next_pos) {
-                pos = next_pos;
-            }
-            // Drop down
-            let next_pos = pos + Vector2D::new(0, -1);
-            if tower.overlaps(rock, next_pos) {
-                // Landed
-                break;
-            }
-            pos = next_pos;
-        }
-        tower.place_rock(rock, pos);
+        tower.drop_rock(rock, &mut jets);
     }
     tower.height
 }
