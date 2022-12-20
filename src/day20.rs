@@ -6,19 +6,19 @@ pub fn input_generator(input: &str) -> Vec<i64> {
 fn mix(values: &mut Vec<i64>, order: &[i64], rounds: usize) {
     let mut indices = (0..values.len()).collect::<Vec<_>>();
     for _ in 0..rounds {
-    for (i, &shift) in order.into_iter().enumerate() {
-        if shift == 0 {
-            continue;
+        for (i, &shift) in order.into_iter().enumerate() {
+            if shift == 0 {
+                continue;
+            }
+            let idx = indices.iter().position(|&x| x == i).unwrap();
+            let len = indices.len() as i64 - 1;
+            let mut new_idx = (((idx as i64 + shift) % len) + len) % len;
+            if new_idx == 0 {
+                new_idx = len;
+            }
+            let value = indices.remove(idx);
+            indices.insert(new_idx as usize, value);
         }
-        let idx = indices.iter().position(|&x| x == i).unwrap();
-        let len = indices.len() as i64 - 1;
-        let mut new_idx = (((idx as i64 + shift) % len) + len) % len;
-        if new_idx == 0 {
-            new_idx = len;
-        }
-        let value = indices.remove(idx);
-        indices.insert(new_idx as usize, value);
-    }
     }
     let orig_values = values.clone();
     for (i, idx) in indices.into_iter().enumerate() {
