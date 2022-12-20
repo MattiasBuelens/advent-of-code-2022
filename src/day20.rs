@@ -28,9 +28,9 @@ fn mix(values: &mut Vec<i64>, order: &[i64], rounds: usize) {
 
 fn grove_coordinates(values: &[i64]) -> i64 {
     let zero_pos = values.iter().position(|&x| x == 0).unwrap();
-    dbg!(values[(zero_pos + 1000) % values.len()])
-        + dbg!(values[(zero_pos + 2000) % values.len()])
-        + dbg!(values[(zero_pos + 3000) % values.len()])
+    values[(zero_pos + 1000) % values.len()]
+        + values[(zero_pos + 2000) % values.len()]
+        + values[(zero_pos + 3000) % values.len()]
 }
 
 #[aoc(day20, part1)]
