@@ -53,9 +53,94 @@ pub fn part1(input: &Input) -> i64 {
     solve("root", input, &mut HashMap::new())
 }
 
+fn depends_on_humn<'a>(name: &'a str, yells: &'a Input) -> bool {
+    if name == "humn" {
+        return true;
+    }
+    match yells.get(name).unwrap() {
+        Yell::Number(x) => false,
+        Yell::Add(left, right)
+        | Yell::Subtract(left, right)
+        | Yell::Multiply(left, right)
+        | Yell::Divide(left, right) => {
+            depends_on_humn(left, yells) || depends_on_humn(right, yells)
+        }
+    }
+}
+
+fn solve_for_humn(name: &str, value: i64, yells: &Input, cache: &mut HashMap<String, i64>) -> i64 {
+    if name == "humn" {
+        return value;
+    }
+    match yells.get(name).unwrap() {
+        Yell::Number(_) => panic!("unexpected number"),
+        Yell::Add(left, right) => {
+            if depends_on_humn(left, yells) {
+                // X = L + R => L = X - R
+                let left_value = value - solve(right, yells, cache);
+                solve_for_humn(left, left_value, yells, cache)
+            } else {
+                // X = L + R => R = X - L
+                let right_value = value - solve(left, yells, cache);
+                solve_for_humn(right, right_value, yells, cache)
+            }
+        }
+        Yell::Subtract(left, right) => {
+            if depends_on_humn(left, yells) {
+                // X = L - R => L = X + R
+                let left_value = value + solve(right, yells, cache);
+                solve_for_humn(left, left_value, yells, cache)
+            } else {
+                // X = L - R => R = L - X
+                let right_value = solve(left, yells, cache) - value;
+                solve_for_humn(right, right_value, yells, cache)
+            }
+        }
+        Yell::Multiply(left, right) => {
+            if depends_on_humn(left, yells) {
+                // X = L * R => L = X / R
+                let left_value = value / solve(right, yells, cache);
+                solve_for_humn(left, left_value, yells, cache)
+            } else {
+                // X = L * R => R = X / L
+                let right_value = value / solve(left, yells, cache);
+                solve_for_humn(right, right_value, yells, cache)
+            }
+        }
+        Yell::Divide(left, right) => {
+            if depends_on_humn(left, yells) {
+                // X = L / R => L = X * R
+                let left_value = value * solve(right, yells, cache);
+                solve_for_humn(left, left_value, yells, cache)
+            } else {
+                // X = L / R => R = L / X
+                let right_value = solve(left, yells, cache) / value;
+                solve_for_humn(right, right_value, yells, cache)
+            }
+        }
+    }
+}
+
 #[aoc(day21, part2)]
-pub fn part2(input: &Input) -> i64 {
-    todo!()
+pub fn part2(yells: &Input) -> i64 {
+    let (left, right) = if let Yell::Add(left, right) = yells.get("root").unwrap() {
+        (left, right)
+    } else {
+        panic!("unexpected root equation")
+    };
+    // One side of the equality depends on "humn", the other side doesn't.
+    let (dependent, independent) =
+        match (depends_on_humn(left, yells), depends_on_humn(right, yells)) {
+            (true, false) => (left, right),
+            (false, true) => (right, left),
+            (true, true) => panic!("both sides depend on humn"),
+            (false, false) => panic!("no side depends on humn"),
+        };
+    // Compute the value of the independent side
+    let mut cache = HashMap::new();
+    let value = solve(independent, yells, &mut cache);
+    // Set the dependent side equal to the same value and solve for "humn"
+    solve_for_humn(dependent, value, yells, &mut cache)
 }
 
 #[cfg(test)]
@@ -91,6 +176,6 @@ hmdt: 32"
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 301);
     }
 }
