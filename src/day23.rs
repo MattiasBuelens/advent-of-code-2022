@@ -63,7 +63,7 @@ impl Direction {
     }
 }
 
-fn step(grid: &Grid, directions: &[Direction]) -> Grid {
+fn step(grid: &Grid, directions: &[Direction]) -> (bool, Grid) {
     let mut proposals = HashMap::<Vector2D, Vector2D>::new();
     let mut nb_proposals = HashMap::<Vector2D, usize>::new();
 
@@ -93,10 +93,15 @@ fn step(grid: &Grid, directions: &[Direction]) -> Grid {
         }
     }
 
+    if proposals.is_empty() {
+        return (true, grid.clone());
+    }
+
     // Second half: each Elf moves to their proposed destination tile
     // if they were the only Elf to propose moving to that position.
     // If two or more Elves propose moving to the same position, none of those Elves move.
-    grid.into_iter()
+    let new_grid = grid
+        .into_iter()
         .map(|&elf| {
             match proposals.get(&elf) {
                 Some(&next) if *nb_proposals.get(&next).unwrap() == 1 => {
@@ -109,7 +114,8 @@ fn step(grid: &Grid, directions: &[Direction]) -> Grid {
                 }
             }
         })
-        .collect()
+        .collect();
+    (false, new_grid)
 }
 
 fn count_empty(grid: &Grid) -> i32 {
@@ -148,7 +154,8 @@ pub fn part1(input: &Grid) -> i32 {
     let mut grid = input.clone();
     let mut directions = [Direction::N, Direction::S, Direction::W, Direction::E];
     for _round in 1..=10 {
-        grid = step(&grid, &directions);
+        let (_, new_grid) = step(&grid, &directions);
+        grid = new_grid;
         directions.rotate_left(1);
         // println!("After round {_round}:");
         // print_grid(&grid);
@@ -158,8 +165,19 @@ pub fn part1(input: &Grid) -> i32 {
 }
 
 #[aoc(day23, part2)]
-pub fn part2(input: &Grid) -> i32 {
-    todo!()
+pub fn part2(input: &Grid) -> usize {
+    let mut grid = input.clone();
+    let mut directions = [Direction::N, Direction::S, Direction::W, Direction::E];
+    let mut round = 1;
+    loop {
+        let (done, new_grid) = step(&grid, &directions);
+        if done {
+            return round;
+        }
+        grid = new_grid;
+        directions.rotate_left(1);
+        round += 1;
+    }
 }
 
 #[cfg(test)]
@@ -201,6 +219,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&LARGE);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 20);
     }
 }
