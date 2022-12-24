@@ -152,7 +152,11 @@ impl State {
         !valley.is_wall(&self.you) && !self.in_blizzard(valley, blizzards)
     }
 
-    fn successors<'a>(&'a self, valley: &'a Valley, blizzards: &'a [Blizzard]) -> impl Iterator<Item = State> + 'a {
+    fn successors<'a>(
+        &'a self,
+        valley: &'a Valley,
+        blizzards: &'a [Blizzard],
+    ) -> impl Iterator<Item = State> + 'a {
         // Increase the time
         let state = self.clone().step();
         // Wait in current position...
@@ -178,14 +182,8 @@ impl State {
     }
 }
 
-#[aoc(day24, part1)]
-pub fn part1(input: &Input) -> i32 {
-    // input.valley.print(&input.blizzards);
-    let start = State {
-        you: input.valley.start(),
-        time: 0,
-    };
-    let (_path, time) = astar(
+fn shortest_path(input: &Input, start: State, goal: Vector2D) -> State {
+    let (path, _time) = astar(
         &start,
         |state| {
             state
@@ -193,16 +191,33 @@ pub fn part1(input: &Input) -> i32 {
                 .map(|state| (state, 1))
                 .collect::<Vec<_>>()
         },
-        |state| (state.you - input.valley.goal()).manhattan_distance(),
-        |state| &state.you == &input.valley.goal(),
+        |state| (state.you - goal).manhattan_distance(),
+        |state| &state.you == &goal,
     )
     .unwrap();
-    time
+    path.last().unwrap().clone()
+}
+
+#[aoc(day24, part1)]
+pub fn part1(input: &Input) -> i32 {
+    // input.valley.print(&input.blizzards);
+    let start = State {
+        you: input.valley.start(),
+        time: 0,
+    };
+    shortest_path(input, start, input.valley.goal()).time
 }
 
 #[aoc(day24, part2)]
 pub fn part2(input: &Input) -> i32 {
-    todo!()
+    let start = State {
+        you: input.valley.start(),
+        time: 0,
+    };
+    let first_goal = shortest_path(input, start, input.valley.goal());
+    let start_again = shortest_path(input, first_goal, input.valley.start());
+    let second_goal = shortest_path(input, start_again, input.valley.goal());
+    second_goal.time
 }
 
 #[cfg(test)]
@@ -229,6 +244,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 54);
     }
 }
