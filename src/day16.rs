@@ -116,14 +116,14 @@ impl State {
                 next
             });
         }
-        return successors;
+        successors
     }
 }
 
 #[aoc(day16, part1)]
 pub fn part1(input: &[Valve]) -> u32 {
     let valves = input
-        .into_iter()
+        .iter()
         .cloned()
         .map(|valve| (valve.name.clone(), valve))
         .collect::<HashMap<_, _>>();
@@ -153,7 +153,7 @@ pub fn part1(input: &[Valve]) -> u32 {
 }
 
 #[aoc(day16, part2)]
-pub fn part2(input: &[Valve]) -> i32 {
+pub fn part2(_input: &[Valve]) -> i32 {
     todo!()
 }
 

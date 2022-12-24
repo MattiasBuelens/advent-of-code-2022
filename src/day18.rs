@@ -19,7 +19,7 @@ pub fn input_generator(input: &str) -> Vec<Vector3D> {
 #[aoc(day18, part1)]
 pub fn part1(input: &[Vector3D]) -> u64 {
     let mut area = 0;
-    let cubes = input.into_iter().cloned().collect::<HashSet<_>>();
+    let cubes = input.iter().cloned().collect::<HashSet<_>>();
     for cube in &cubes {
         for neighbour in cube.neighbours() {
             if !cubes.contains(&neighbour) {
@@ -37,7 +37,7 @@ pub fn part2(input: &[Vector3D]) -> u64 {
         .flat_map(|cube| cube.coords.into_iter())
         .max()
         .unwrap();
-    let cubes = input.into_iter().cloned().collect::<HashSet<_>>();
+    let cubes = input.iter().cloned().collect::<HashSet<_>>();
     // Flood-fill to find all exterior cubes
     let mut queue = VecDeque::from([Vector3D::zero()]);
     let mut exterior = HashSet::new();

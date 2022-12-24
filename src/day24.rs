@@ -177,8 +177,8 @@ impl State {
             ..state.clone()
         });
         // Make sure we're not in a wall or a blizzard
-        let states = states.filter(|state| state.is_valid(valley, blizzards));
-        states
+        
+        states.filter(|state| state.is_valid(valley, blizzards))
     }
 }
 

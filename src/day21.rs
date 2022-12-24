@@ -58,7 +58,7 @@ fn depends_on_humn<'a>(name: &'a str, yells: &'a Input) -> bool {
         return true;
     }
     match yells.get(name).unwrap() {
-        Yell::Number(x) => false,
+        Yell::Number(_x) => false,
         Yell::Add(left, right)
         | Yell::Subtract(left, right)
         | Yell::Multiply(left, right)

@@ -6,7 +6,7 @@ pub fn input_generator(input: &str) -> Vec<i64> {
 fn mix(values: &mut Vec<i64>, order: &[i64], rounds: usize) {
     let mut indices = (0..values.len()).collect::<Vec<_>>();
     for _ in 0..rounds {
-        for (i, &shift) in order.into_iter().enumerate() {
+        for (i, &shift) in order.iter().enumerate() {
             if shift == 0 {
                 continue;
             }
@@ -42,7 +42,7 @@ pub fn part1(input: &[i64]) -> i64 {
 
 #[aoc(day20, part2)]
 pub fn part2(input: &[i64]) -> i64 {
-    let mut values = input.into_iter().map(|x| x * 811589153).collect::<Vec<_>>();
+    let mut values = input.iter().map(|x| x * 811589153).collect::<Vec<_>>();
     let order = values.clone();
     mix(&mut values, &order, 10);
     grove_coordinates(&values)

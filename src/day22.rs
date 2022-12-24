@@ -145,7 +145,7 @@ pub fn part1(input: &Input) -> i32 {
 }
 
 #[aoc(day22, part2)]
-pub fn part2(input: &Input) -> i32 {
+pub fn part2(_input: &Input) -> i32 {
     todo!()
 }
 

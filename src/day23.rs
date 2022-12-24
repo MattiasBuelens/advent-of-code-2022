@@ -101,7 +101,7 @@ fn step(grid: &Grid, directions: &[Direction]) -> (bool, Grid) {
     // if they were the only Elf to propose moving to that position.
     // If two or more Elves propose moving to the same position, none of those Elves move.
     let new_grid = grid
-        .into_iter()
+        .iter()
         .map(|&elf| {
             match proposals.get(&elf) {
                 Some(&next) if *nb_proposals.get(&next).unwrap() == 1 => {
