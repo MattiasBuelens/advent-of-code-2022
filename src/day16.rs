@@ -120,6 +120,24 @@ impl State {
     }
 }
 
+fn solve(valves: &HashMap<String, Valve>, max_time: u32) -> Vec<State> {
+    let distances = make_distance_map(&valves);
+    let start_state = State::new("AA".to_string(), max_time);
+    let mut queue = Vec::<State>::new();
+    queue.push(start_state);
+    let mut solutions = Vec::new();
+    while let Some(state) = queue.pop() {
+        for next in state.successors(&valves, &distances) {
+            if next.time == max_time {
+                solutions.push(next);
+            } else {
+                queue.push(next);
+            }
+        }
+    }
+    solutions
+}
+
 #[aoc(day16, part1)]
 pub fn part1(input: &[Valve]) -> u32 {
     let valves = input
@@ -127,29 +145,13 @@ pub fn part1(input: &[Valve]) -> u32 {
         .cloned()
         .map(|valve| (valve.name.clone(), valve))
         .collect::<HashMap<_, _>>();
-    let distances = make_distance_map(&valves);
     let max_time = 30;
-    let start_state = State::new("AA".to_string(), max_time);
-    let mut queue = Vec::<State>::new();
-    queue.push(start_state);
-    let mut best_state: Option<State> = None;
-    while let Some(state) = queue.pop() {
-        for next in state.successors(&valves, &distances) {
-            if next.time == max_time {
-                match &best_state {
-                    Some(best) if best.released_pressure >= next.released_pressure => {
-                        // Current best is still the best.
-                    }
-                    _ => {
-                        best_state = Some(next);
-                    }
-                };
-            } else {
-                queue.push(next);
-            }
-        }
-    }
-    best_state.unwrap().released_pressure
+    let solutions = solve(&valves, max_time);
+    solutions
+        .iter()
+        .map(|state| state.released_pressure)
+        .max()
+        .unwrap()
 }
 
 #[aoc(day16, part2)]
