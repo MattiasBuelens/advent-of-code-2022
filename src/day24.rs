@@ -30,8 +30,8 @@ pub struct Input {
 
 #[aoc_generator(day24)]
 pub fn input_generator(input: &str) -> Input {
-    let height = input.lines().count() as i32;
-    let width = input.lines().next().unwrap().len() as i32;
+    let height = input.lines().count() as i32 - 2;
+    let width = input.lines().next().unwrap().len() as i32 - 2;
     let valley = Valley { width, height };
     let blizzards = input
         .lines()
@@ -45,7 +45,7 @@ pub fn input_generator(input: &str) -> Input {
                     '>' => Direction::Right,
                     _ => return None,
                 };
-                let pos = Vector2D::new(x as i32, y as i32);
+                let pos = Vector2D::new(x as i32 - 1, y as i32 - 1);
                 Some(Blizzard { pos, dir })
             })
         })
@@ -62,24 +62,51 @@ impl Direction {
             Direction::Right => Vector2D::new(1, 0),
         }
     }
+
+    fn print(&self) -> char {
+        match self {
+            Direction::Up => '^',
+            Direction::Down => 'v',
+            Direction::Left => '<',
+            Direction::Right => '>',
+        }
+    }
 }
 
 impl Valley {
     fn start(&self) -> Vector2D {
-        Vector2D::new(1, 0)
+        Vector2D::new(0, -1)
     }
 
     fn goal(&self) -> Vector2D {
-        Vector2D::new(self.width - 2, self.height - 1)
+        Vector2D::new(self.width - 1, self.height)
     }
 
     fn is_wall(&self, pos: &Vector2D) -> bool {
-        if pos.y() == 0 {
+        if pos.y() == -1 {
             *pos != self.start()
-        } else if pos.y() == self.height - 1 {
+        } else if pos.y() == self.height {
             *pos != self.goal()
         } else {
-            pos.x() < 1 || pos.x() >= self.width - 1
+            pos.x() < 0 || pos.x() >= self.width
+        }
+    }
+
+    #[allow(unused)]
+    fn print(&self, blizzards: &[Blizzard]) {
+        for y in -1..=self.height {
+            for x in -1..=self.width {
+                let pos = Vector2D::new(x, y);
+                let c = if self.is_wall(&pos) {
+                    '#'
+                } else if let Some(blizzard) = blizzards.iter().find(|x| x.pos == pos) {
+                    blizzard.dir.print()
+                } else {
+                    '.'
+                };
+                print!("{}", c);
+            }
+            println!();
         }
     }
 }
@@ -87,51 +114,61 @@ impl Valley {
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 struct State {
     you: Vector2D,
-    blizzards: Vec<Blizzard>,
+    time: i32,
 }
 
 impl State {
-    fn step(&self, valley: &Valley) -> State {
-        let blizzards = self
-            .blizzards
-            .iter()
-            .map(|blizzard| {
-                let Blizzard { pos, dir } = blizzard.clone();
-                let mut pos = pos + dir.step();
-                if valley.is_wall(&pos) {
-                    pos = match (pos.x(), pos.y()) {
-                        (0, y) => Vector2D::new(valley.width - 2, y),
-                        (x, y) if x == valley.width - 1 => Vector2D::new(1, y),
-                        (x, 0) => Vector2D::new(x, valley.height - 2),
-                        (x, y) if y == valley.height - 1 => Vector2D::new(x, 1),
-                        _ => panic!("blizzard out of bounds at {pos}"),
-                    }
-                }
-                Blizzard { pos, dir }
-            })
-            .collect();
+    fn step(self) -> Self {
         Self {
-            you: self.you,
-            blizzards,
+            time: self.time + 1,
+            ..self
         }
+    }
+
+    fn in_blizzard(&self, valley: &Valley, blizzards: &[Blizzard]) -> bool {
+        blizzards
+            .iter()
+            .filter(|blizzard| {
+                // Only consider blizzards that are aligned with us
+                if blizzard.dir == Direction::Up || blizzard.dir == Direction::Down {
+                    self.you.x() == blizzard.pos.x()
+                } else {
+                    self.you.y() == blizzard.pos.y()
+                }
+            })
+            .any(|blizzard| {
+                // Compute current position of blizzard
+                let pos = blizzard.pos + (blizzard.dir.step() * self.time);
+                let pos = Vector2D::new(
+                    (pos.x() % valley.width + valley.width) % valley.width,
+                    (pos.y() % valley.height + valley.height) % valley.height,
+                );
+                // Check if we overlap with it
+                pos == self.you
+            })
+    }
+
+    fn is_valid(&self, valley: &Valley, blizzards: &[Blizzard]) -> bool {
+        !valley.is_wall(&self.you) && !self.in_blizzard(valley, blizzards)
     }
 }
 
 #[aoc(day24, part1)]
 pub fn part1(input: &Input) -> i32 {
+    // input.valley.print(&input.blizzards);
     let start = State {
         you: input.valley.start(),
-        blizzards: input.blizzards.clone(),
+        time: 0,
     };
-    let (_, time) = astar(
+    let (_path, time) = astar(
         &start,
         |state| {
-            // Move the blizzards
-            let state = state.step(&input.valley);
+            // Increase the time
+            let state = state.clone().step();
             // Wait in current position...
-            let states = once(state.clone());
+            let positions = once(state.you);
             // ...or move in any direction...
-            let states = states.chain(
+            let positions = positions.chain(
                 [
                     Direction::Up,
                     Direction::Down,
@@ -139,19 +176,14 @@ pub fn part1(input: &Input) -> i32 {
                     Direction::Right,
                 ]
                 .into_iter()
-                .map(|dir| State {
-                    you: state.you + dir.step(),
-                    ..state.clone()
-                }),
+                .map(|dir| state.you + dir.step()),
             );
-            // Make sure we're not in a wall or a blizzard
-            let states = states.filter(|state| {
-                !input.valley.is_wall(&state.you)
-                    && !state
-                        .blizzards
-                        .iter()
-                        .any(|blizzard| blizzard.pos == state.you)
+            let states = positions.into_iter().map(|you| State {
+                you,
+                ..state.clone()
             });
+            // Make sure we're not in a wall or a blizzard
+            let states = states.filter(|state| state.is_valid(&input.valley, &input.blizzards));
             // Each step takes 1 minute
             let states = states.map(|state| (state, 1));
             states.collect::<Vec<_>>()
