@@ -151,6 +151,31 @@ impl State {
     fn is_valid(&self, valley: &Valley, blizzards: &[Blizzard]) -> bool {
         !valley.is_wall(&self.you) && !self.in_blizzard(valley, blizzards)
     }
+
+    fn successors<'a>(&'a self, valley: &'a Valley, blizzards: &'a [Blizzard]) -> impl Iterator<Item = State> + 'a {
+        // Increase the time
+        let state = self.clone().step();
+        // Wait in current position...
+        let positions = once(self.you);
+        // ...or move in any direction...
+        let positions = positions.chain(
+            [
+                Direction::Up,
+                Direction::Down,
+                Direction::Left,
+                Direction::Right,
+            ]
+            .into_iter()
+            .map(move |dir| state.you + dir.step()),
+        );
+        let states = positions.into_iter().map(move |you| State {
+            you,
+            ..state.clone()
+        });
+        // Make sure we're not in a wall or a blizzard
+        let states = states.filter(|state| state.is_valid(valley, blizzards));
+        states
+    }
 }
 
 #[aoc(day24, part1)]
@@ -163,30 +188,10 @@ pub fn part1(input: &Input) -> i32 {
     let (_path, time) = astar(
         &start,
         |state| {
-            // Increase the time
-            let state = state.clone().step();
-            // Wait in current position...
-            let positions = once(state.you);
-            // ...or move in any direction...
-            let positions = positions.chain(
-                [
-                    Direction::Up,
-                    Direction::Down,
-                    Direction::Left,
-                    Direction::Right,
-                ]
-                .into_iter()
-                .map(|dir| state.you + dir.step()),
-            );
-            let states = positions.into_iter().map(|you| State {
-                you,
-                ..state.clone()
-            });
-            // Make sure we're not in a wall or a blizzard
-            let states = states.filter(|state| state.is_valid(&input.valley, &input.blizzards));
-            // Each step takes 1 minute
-            let states = states.map(|state| (state, 1));
-            states.collect::<Vec<_>>()
+            state
+                .successors(&input.valley, &input.blizzards)
+                .map(|state| (state, 1))
+                .collect::<Vec<_>>()
         },
         |state| (state.you - input.valley.goal()).manhattan_distance(),
         |state| &state.you == &input.valley.goal(),
