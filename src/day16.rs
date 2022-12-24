@@ -34,7 +34,7 @@ pub fn input_generator(input: &str) -> Vec<Valve> {
 
 fn make_valve_map(valves: &[Valve]) -> HashMap<String, Valve> {
     valves
-        .iter()
+        .into_iter()
         .cloned()
         .map(|valve| (valve.name.clone(), valve))
         .collect()
@@ -118,7 +118,7 @@ impl<const N: usize> State<N> {
         for state in states.iter_mut() {
             state.tick(valves);
         }
-        states
+        return states;
     }
 
     fn next_actions(
@@ -160,12 +160,12 @@ impl<const N: usize> State<N> {
                     // Not enough time to open valve
                     return None;
                 }
-                Some(Action::Moving(pos.clone(), valve_name.clone(), distance))
+                return Some(Action::Moving(pos.clone(), valve_name.clone(), distance));
             })
             .collect::<Vec<_>>();
         // If actor cannot move to any valve, stay idle
         if actions.is_empty() {
-            actions.push(Action::Idle(pos));
+            actions.push(Action::Idle(pos.clone()));
         }
         actions
     }
@@ -198,7 +198,7 @@ impl<const N: usize> State<N> {
         queue.push(self);
         let mut best_state: Option<Self> = None;
         while let Some(state) = queue.pop() {
-            for next in state.successors(valves, distances) {
+            for next in state.successors(&valves, &distances) {
                 if next.time == max_time {
                     match &best_state {
                         Some(best) if best.released_pressure >= next.released_pressure => {
