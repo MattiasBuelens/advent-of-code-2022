@@ -49,8 +49,6 @@ pub fn input_generator(input: &str) -> Vec<Blueprint> {
     input.lines().map(|line| line.parse().unwrap()).collect()
 }
 
-const DURATION: u32 = 24;
-
 #[derive(Debug, Default, Clone)]
 struct State {
     ore: u32,
@@ -192,13 +190,17 @@ impl State {
 pub fn part1(input: &[Blueprint]) -> u32 {
     input
         .into_iter()
-        .map(|blueprint| (blueprint.number as u32) * State::new().most_geodes(DURATION, blueprint))
+        .map(|blueprint| (blueprint.number as u32) * State::new().most_geodes(24, blueprint))
         .sum()
 }
 
 #[aoc(day19, part2)]
-pub fn part2(input: &[Blueprint]) -> i32 {
-    todo!()
+pub fn part2(input: &[Blueprint]) -> u32 {
+    input
+        .into_iter()
+        .take(3)
+        .map(|blueprint| State::new().most_geodes(32, blueprint))
+        .product()
 }
 
 #[cfg(test)]
@@ -218,6 +220,6 @@ mod tests {
     #[test]
     fn test_part2() {
         let input = input_generator(&TEST_INPUT);
-        assert_eq!(part2(&input), 0);
+        assert_eq!(part2(&input), 56 * 62);
     }
 }
