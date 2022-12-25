@@ -43,10 +43,8 @@ pub fn part2(input: &[Vector3D]) -> u64 {
     let mut exterior = HashSet::new();
     while let Some(pos) = queue.pop_front() {
         for neighbour in pos.neighbours() {
-            if exterior.contains(&neighbour) {
-                // Already visited
-            } else if cubes.contains(&neighbour) {
-                // Cube is internal
+            if exterior.contains(&neighbour) || cubes.contains(&neighbour) {
+                // Already visited, or cube is internal
             } else if neighbour
                 .coords
                 .iter()

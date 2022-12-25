@@ -177,7 +177,7 @@ impl State {
             ..state.clone()
         });
         // Make sure we're not in a wall or a blizzard
-        
+
         states.filter(|state| state.is_valid(valley, blizzards))
     }
 }
@@ -192,7 +192,7 @@ fn shortest_path(input: &Input, start: State, goal: Vector2D) -> State {
                 .collect::<Vec<_>>()
         },
         |state| (state.you - goal).manhattan_distance(),
-        |state| &state.you == &goal,
+        |state| state.you == goal,
     )
     .unwrap();
     path.last().unwrap().clone()

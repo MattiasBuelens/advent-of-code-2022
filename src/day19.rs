@@ -189,7 +189,7 @@ impl State {
 #[aoc(day19, part1)]
 pub fn part1(input: &[Blueprint]) -> u32 {
     input
-        .into_iter()
+        .iter()
         .map(|blueprint| (blueprint.number as u32) * State::new().most_geodes(24, blueprint))
         .sum()
 }
@@ -197,7 +197,7 @@ pub fn part1(input: &[Blueprint]) -> u32 {
 #[aoc(day19, part2)]
 pub fn part2(input: &[Blueprint]) -> u32 {
     input
-        .into_iter()
+        .iter()
         .take(3)
         .map(|blueprint| State::new().most_geodes(32, blueprint))
         .product()

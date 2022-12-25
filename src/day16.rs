@@ -121,13 +121,13 @@ impl State {
 }
 
 fn solve(valves: &HashMap<String, Valve>, max_time: u32) -> Vec<State> {
-    let distances = make_distance_map(&valves);
+    let distances = make_distance_map(valves);
     let start_state = State::new("AA".to_string(), max_time);
     let mut queue = Vec::<State>::new();
     queue.push(start_state);
     let mut solutions = Vec::<State>::new();
     while let Some(state) = queue.pop() {
-        for next in state.successors(&valves, &distances) {
+        for next in state.successors(valves, &distances) {
             if next.time == max_time {
                 // If new solution is not better for this set of valves, drop it
                 if let Some(best_for_valves) =

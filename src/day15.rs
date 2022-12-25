@@ -59,12 +59,6 @@ pub fn part1(input: &[SensorReading]) -> usize {
     count_positions_without_beacons(input, 2_000_000)
 }
 
-fn could_be_distress_beacon(readings: &[SensorReading], pos: Vector2D) -> bool {
-    readings
-        .iter()
-        .all(|reading| pos != reading.beacon && !is_within_reading_range(reading, pos))
-}
-
 fn find_distress_beacon(readings: &[SensorReading], max_coord: i32) -> Vector2D {
     for y in 0..=max_coord {
         let mut x = 0;
