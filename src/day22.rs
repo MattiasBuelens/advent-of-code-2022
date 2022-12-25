@@ -278,7 +278,6 @@ fn fold_cube_inner(
 }
 
 fn find_connected_edge(
-    board: &Board,
     net: &CubeNet,
     side: i32,
     pos: Vector2D,
@@ -329,8 +328,7 @@ fn solve_cube(input: &Input, side: i32) -> i32 {
                     let next_tile = match input.board.get(&next_pos) {
                         Some(tile) => tile,
                         None => {
-                            (next_pos, next_dir) =
-                                find_connected_edge(&input.board, &net, side, pos, dir);
+                            (next_pos, next_dir) = find_connected_edge(&net, side, pos, dir);
                             input.board.get(&next_pos).unwrap()
                         }
                     };
