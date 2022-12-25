@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Display, Formatter};
-use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Eq, PartialEq, Copy, Clone, Hash)]
 pub struct Vector<const N: usize> {
@@ -156,6 +156,20 @@ impl<const N: usize> Mul<i32> for Vector<N> {
 impl<const N: usize> MulAssign<i32> for Vector<N> {
     fn mul_assign(&mut self, rhs: i32) {
         self.for_each(|x| x.mul_assign(rhs));
+    }
+}
+
+impl<const N: usize> Div<i32> for Vector<N> {
+    type Output = Self;
+
+    fn div(self, rhs: i32) -> Self::Output {
+        self.map(|x| x / rhs)
+    }
+}
+
+impl<const N: usize> DivAssign<i32> for Vector<N> {
+    fn div_assign(&mut self, rhs: i32) {
+        self.for_each(|x| x.div_assign(rhs));
     }
 }
 
